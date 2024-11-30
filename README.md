@@ -10,13 +10,21 @@ Moreover, a positional awareness encoding method with a diminishing masking rate
 
 
 ## Implementation
-
+<div style="text-align: center;">
+    <img src="Fig/method.png" alt="Example image" style="width:50%; height:auto;">
+</div>
 
 ## Evaluation
 
 
 ## Visualization
+<div style="text-align: center;">
+    <img src="Fig/exp.png" alt="Example image" style="width:50%; height:auto;">
+</div>
 
+<div style="text-align: center;">
+    <img src="Fig/heatmap2.png" alt="Example image" style="width:50%; height:auto;">
+</div>
 
 ## Acknowledgement
 
