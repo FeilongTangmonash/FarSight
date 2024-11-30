@@ -22,10 +22,6 @@ Moreover, a positional awareness encoding method with a diminishing masking rate
     <img src="Fig/exp.png" alt="Example image" style="width:100%; height:auto;">
 </div>
 
-<div style="text-align: center;">
-    <img src="Fig/heatmap2.png" alt="Example image" style="width:100%; height:auto;">
-</div>
-
 ## Acknowledgement
 
 
