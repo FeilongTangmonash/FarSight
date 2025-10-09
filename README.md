@@ -28,5 +28,11 @@ Moreover, a positional awareness encoding method with a diminishing masking rate
 
 ## Citation
 ```
-
+@inproceedings{tang2025seeing,
+  title={Seeing Far and Clearly: Mitigating Hallucinations in MLLMs with Attention Causal Decoding},
+  author={Tang, Feilong and Liu, Chengzhi and Xu, Zhongxing and Hu, Ming and Huang, Zile and Xue, Haochen and Chen, Ziyang and Peng, Zelin and Yang, Zhiwei and Zhou, Sijin and others},
+  booktitle={Proceedings of the Computer Vision and Pattern Recognition Conference},
+  pages={26147--26159},
+  year={2025}
+}
 ```
