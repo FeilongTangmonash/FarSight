@@ -1,6 +1,6 @@
 # Seeing Far and Clearly: Mitigating Hallucinations in MLLMs with Attention Causal Decoding
 
-![Oral Presentation](https://img.shields.io/badge/✨_Oral_Presentation_Top_3.3%25_✨-gold?style=for-the-badge&labelColor=black)
+![Oral Presentation](https://img.shields.io/badge/✨_Oral_Presentation_Top_3.3%25_✨-pink?style=for-the-badge&labelColor=black)
 
 <a href='https://openaccess.thecvf.com/content/CVPR2025/papers/Tang_Seeing_Far_and_Clearly_Mitigating_Hallucinations_in_MLLMs_with_Attention_CVPR_2025_paper.pdf'>
   <img src='https://img.shields.io/badge/Paper-CVPR%20(Oral)-blue'>
