@@ -24,8 +24,7 @@ Moreover, a positional awareness encoding method with a diminishing masking rate
 ## Evaluation
 
 - [x] Setup
-- [x] Visual Neglect in Modal Fusion
-- [x] VAF Inference & Evaluation
+- [x] Farsight Inference & Evaluation
 
 ---
 
