@@ -16,15 +16,78 @@ Moreover, a positional awareness encoding method with a diminishing masking rate
 
 ## Evaluation
 
+- [x] Setup
+- [x] Visual Neglect in Modal Fusion
+- [x] VAF Inference & Evaluation
 
-## Visualization
-<div style="text-align: center;">
-    <img src="Fig/exp.png" alt="Example image" style="width:100%; height:auto;">
-</div>
+---
+
+#### Setup
+
+```powershell
+conda create -n farsight python=3.10
+conda activate farsight
+cd LLaVA
+pip install -e .
+```
+
+---
+
+#### Visual Neglect in Modal Fusion
+
+We provide the following script to reproduce our analysis results on the over-reliance of multimodal large language models on linguistic priors.
+
+```powershell
+bash ./visaug/analysis/vis_flow.sh
+```
+
+or
+
+```bash
+python ./visaug/analysis/vis_flow.py \
+    --model-path /model/llava \
+    --question-file ./data/pope/coco/coco_pope_random.json \
+    --image-folder ./data/pope/coco/val2014 \
+    --answers-file ./outputs/analysis/res_coco_random.pt 
+```
+
+The analysis results are shown in the two figures below, from which we can draw two key conclusions:
+
+- The model performs the crucial fusion of visual and textual modalities in the middle layers, creating cross-modal semantic representations that drive the final predictions.
+
+- During this critical fusion process, the model demonstrates inadequate attention to the visual modality.
+
+<img title="" src="images/2024-12-18-15-57-55-image.png" alt="" data-align="center" width="625">
+
+---
+
+
+
+## Farsight Inference & Evaluation
+
+###  POPE Evaluation
+
+Use the following scripts to reproduce the experimental results on the **POPE** benchmark.
+
+```bash
+bash ./visaug/inference/infer_pope.sh
+bash ./visaug/inference/eval_pope.sh
+```
+
+---
+
+###  CHAIR Evaluation
+
+Use the following script to evaluate the model on the **CHAIR** benchmark.
+
+```bash
+bash ./visaug/inference/eval_chair.sh
+```
+
+---
+
 
 ## Acknowledgement
-
-
 
 ## Citation
 ```
