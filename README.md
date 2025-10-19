@@ -1,4 +1,5 @@
 # Seeing Far and Clearly: Mitigating Hallucinations in MLLMs with Attention Causal Decoding
+
 CVPR 2025 (Oral, top 3.3% of accepted papers)
 
 <a href='https://openaccess.thecvf.com/content/CVPR2025/papers/Tang_Seeing_Far_and_Clearly_Mitigating_Hallucinations_in_MLLMs_with_Attention_CVPR_2025_paper.pdf'>
