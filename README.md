@@ -64,7 +64,6 @@ bash ./visaug/inference/eval_chair.sh
 
 ---
 
-
 ## Acknowledgement
 
 ## Citation
