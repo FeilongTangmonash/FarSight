@@ -5,13 +5,13 @@ Recent advancements in multimodal large language models (MLLMs) have significant
 Moreover, a positional awareness encoding method with a diminishing masking rate is proposed, allowing the model to attend to further preceding tokens, especially for video sequence tasks. With extensive experiments, FarSight demonstrates significant hallucination-mitigating performance across different MLLMs on both image and video benchmarks, proving its effectiveness.
 
 <div style="text-align: center;">
-    <img src="Fig/intro.png" alt="Example image" style="width:65%; height:auto;">
+    <img src="Fig/intro.png" alt="Example image" style="width:50%; height:auto;">
 </div>
 
 
 ## Implementation
 <div style="text-align: center;">
-    <img src="Fig/method.png" alt="Example image" style="width:65%; height:auto;">
+    <img src="Fig/method.png" alt="Example image" style="width:50%; height:auto;">
 </div>
 
 ## Evaluation
