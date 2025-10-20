@@ -42,8 +42,6 @@ pip install -e .
 
 ## Farsight Inference & Evaluation
 
-
-
 ---
 
 ###  CHAIR Evaluation
@@ -51,7 +49,7 @@ pip install -e .
 Use the following script to evaluate the model on the **CHAIR** benchmark.
 
 ```bash
-bash ./visaug/inference/eval_chair.sh
+bash ./Shell/eval_chair.sh
 ```
 
 ---
