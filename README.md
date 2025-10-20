@@ -44,12 +44,7 @@ pip install -e .
 
 ###  POPE Evaluation
 
-Use the following scripts to reproduce the experimental results on the **POPE** benchmark.
 
-```bash
-bash ./visaug/inference/infer_pope.sh
-bash ./visaug/inference/eval_pope.sh
-```
 
 ---
 
