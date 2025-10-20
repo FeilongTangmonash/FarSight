@@ -42,8 +42,6 @@ pip install -e .
 
 ## Farsight Inference & Evaluation
 
-###  POPE Evaluation
-
 
 
 ---
