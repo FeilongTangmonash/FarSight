@@ -4,11 +4,31 @@ import torch
 import torch.nn.functional as F
 import types
 
+
+def rotate_half(x):
+    """Rotates half the hidden dims of the input."""
+    x1 = x[..., : x.shape[-1] // 2]
+    x2 = x[..., x.shape[-1] // 2 :]
+    return torch.cat((-x2, x1), dim=-1)
+
+
+def apply_rotary_pos_emb(q, k, cos, sin, position_ids):
+    """Apply rotary position embedding to query and key tensors."""
+    # The first two dimensions of cos and sin are always 1, so we can `squeeze` them.
+    cos = cos.squeeze(1).squeeze(0)  # [seq_len, dim]
+    sin = sin.squeeze(1).squeeze(0)  # [seq_len, dim]
+    cos = cos[position_ids].unsqueeze(1)  # [bs, 1, seq_len, dim]
+    sin = sin[position_ids].unsqueeze(1)  # [bs, 1, seq_len, dim]
+    q_embed = (q * cos) + (rotate_half(q) * sin)
+    k_embed = (k * cos) + (rotate_half(k) * sin)
+    return q_embed, k_embed
+
+
 def farsight_attention_forward_v2(
     self,
     hidden_states,
     attention_mask=None,
-    position_ids=None,           # 接住但不使用
+    position_ids=None,
     past_key_value=None,         # 兼容 KV 缓存接口
     output_attentions=False,     # 是否需要返回注意力矩阵
     use_cache=False,             # 兼容 generate 传参；本实现不支持
@@ -26,12 +46,29 @@ def farsight_attention_forward_v2(
     dtype = hidden_states.dtype
     device = hidden_states.device
 
-    # Q K V
+    # Q K V projections
+    # Handle both standard attention and grouped-query attention (GQA)
+    num_key_value_heads = getattr(self, 'num_key_value_heads', self.num_heads)
+    
     q = self.q_proj(hidden_states).view(B, L, self.num_heads, self.head_dim).transpose(1, 2)
-    k = self.k_proj(hidden_states).view(B, L, self.num_heads, self.head_dim).transpose(1, 2)
-    v = self.v_proj(hidden_states).view(B, L, self.num_heads, self.head_dim).transpose(1, 2)
+    k = self.k_proj(hidden_states).view(B, L, num_key_value_heads, self.head_dim).transpose(1, 2)
+    v = self.v_proj(hidden_states).view(B, L, num_key_value_heads, self.head_dim).transpose(1, 2)
 
-    # 原始分数
+    # Apply rotary position embeddings (critical for LLaMA!)
+    if hasattr(self, 'rotary_emb'):
+        kv_seq_len = k.shape[-2]
+        cos, sin = self.rotary_emb(v, seq_len=kv_seq_len)
+        if position_ids is None:
+            position_ids = torch.arange(L, device=device).unsqueeze(0)
+        q, k = apply_rotary_pos_emb(q, k, cos, sin, position_ids)
+    
+    # Handle grouped query attention (GQA) - repeat KV heads if needed
+    num_key_value_groups = getattr(self, 'num_key_value_groups', 1)
+    if num_key_value_groups > 1:
+        k = k.repeat_interleave(num_key_value_groups, dim=1)
+        v = v.repeat_interleave(num_key_value_groups, dim=1)
+
+    # Compute attention scores
     attn_scores = torch.matmul(q, k.transpose(-2, -1)) / math.sqrt(self.head_dim)  # [B,H,L,L]
 
     # 因果下三角 C（两次用）
@@ -109,7 +146,37 @@ def farsight_attention_forward_v2(
     # ===== padding-safe 结束 =====
 
     # 组装 W 与 softmax
+    # FarSight formula: W = (QK^T/√d) ⊙ C + P
+    # where C is causal mask (lower triangular 1s), P is FarSight upper triangular penalties
+    
+    # Create a large negative value for masking (using -1e9 instead of -inf to avoid NaN issues)
+    NEG_INF = -1e9
+    
+    # For the lower triangular (causal): keep original attention scores
+    # For the upper triangular (future): apply FarSight penalties (allows limited look-ahead)
+    # The original code: attn_scores * C zeros out upper triangular completely,
+    # then adds P_total which has penalties only in upper triangular.
+    # This effectively gives: lower_tri = original_scores, upper_tri = penalties
+    
     W = attn_scores * C + P_total
+    
+    # Apply attention mask for padding tokens if provided
+    # The attention_mask from HuggingFace models is typically in additive format (0 for attend, -inf for mask)
+    if attention_mask is not None:
+        # Handle different attention mask formats from HuggingFace
+        if attention_mask.dim() == 4 and attention_mask.shape[-2] == L and attention_mask.shape[-1] == L:
+            # [B, 1, L, L] format - additive mask with 0 or -inf values
+            W = W + attention_mask.to(dtype)
+        elif attention_mask.dim() == 4 and attention_mask.shape[-2] == 1:
+            # [B, 1, 1, L] format - broadcast over query dimension
+            W = W + attention_mask.to(dtype)
+        elif attention_mask.dim() == 2:
+            # [B, L] format - binary mask (1 for attend, 0 for mask)
+            # Convert to additive mask format [B, 1, 1, L]
+            expanded_mask = attention_mask.unsqueeze(1).unsqueeze(2).to(dtype)
+            additive_mask = (1.0 - expanded_mask) * NEG_INF
+            W = W + additive_mask
+    
     attn_probs = torch.softmax(W, dim=-1) * C
 
     # 输出
