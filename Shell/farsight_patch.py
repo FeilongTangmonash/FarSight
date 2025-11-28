@@ -14,11 +14,23 @@ def rotate_half(x):
 
 def apply_rotary_pos_emb(q, k, cos, sin, position_ids):
     """Apply rotary position embedding to query and key tensors."""
-    # The first two dimensions of cos and sin are always 1, so we can `squeeze` them.
-    cos = cos.squeeze(1).squeeze(0)  # [seq_len, dim]
-    sin = sin.squeeze(1).squeeze(0)  # [seq_len, dim]
-    cos = cos[position_ids].unsqueeze(1)  # [bs, 1, seq_len, dim]
-    sin = sin[position_ids].unsqueeze(1)  # [bs, 1, seq_len, dim]
+    # Handle different shapes of cos and sin from rotary embeddings
+    # Expected final shapes: cos, sin -> [bs, 1, seq_len, dim]
+    while cos.dim() > 2 and cos.shape[0] == 1:
+        cos = cos.squeeze(0)
+    while sin.dim() > 2 and sin.shape[0] == 1:
+        sin = sin.squeeze(0)
+    
+    # cos, sin should now be [seq_len, dim] or [1, seq_len, dim]
+    if cos.dim() == 2:
+        # [seq_len, dim] -> index by position_ids and add head dimension
+        cos = cos[position_ids].unsqueeze(1)  # [bs, 1, seq_len, dim]
+        sin = sin[position_ids].unsqueeze(1)  # [bs, 1, seq_len, dim]
+    elif cos.dim() == 3:
+        # [1, seq_len, dim] -> index by position_ids
+        cos = cos.squeeze(0)[position_ids].unsqueeze(1)
+        sin = sin.squeeze(0)[position_ids].unsqueeze(1)
+    
     q_embed = (q * cos) + (rotate_half(q) * sin)
     k_embed = (k * cos) + (rotate_half(k) * sin)
     return q_embed, k_embed
@@ -57,14 +69,14 @@ def farsight_attention_forward_v2(
     # Apply rotary position embeddings (critical for LLaMA!)
     if hasattr(self, 'rotary_emb'):
         kv_seq_len = k.shape[-2]
-        cos, sin = self.rotary_emb(v, seq_len=kv_seq_len)
+        cos, sin = self.rotary_emb(k, seq_len=kv_seq_len)
         if position_ids is None:
             position_ids = torch.arange(L, device=device).unsqueeze(0)
         q, k = apply_rotary_pos_emb(q, k, cos, sin, position_ids)
     
     # Handle grouped query attention (GQA) - repeat KV heads if needed
-    num_key_value_groups = getattr(self, 'num_key_value_groups', 1)
-    if num_key_value_groups > 1:
+    if num_key_value_heads < self.num_heads:
+        num_key_value_groups = self.num_heads // num_key_value_heads
         k = k.repeat_interleave(num_key_value_groups, dim=1)
         v = v.repeat_interleave(num_key_value_groups, dim=1)
 
